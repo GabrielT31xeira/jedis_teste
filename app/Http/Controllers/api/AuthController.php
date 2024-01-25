@@ -62,7 +62,7 @@ class AuthController extends Controller
             ]);
 
             # Gerando e retornando o token para o usuarios
-            $token = $user->createToken('LaravelAuthApp')->accessToken;
+            $token = $user->createToken('JedisAPI')->accessToken;
             return response()->json([
                 'message' => 'User created successfully',
                 'token' => $token

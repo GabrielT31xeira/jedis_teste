@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\AuthController;
+use App\Http\Controllers\api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -21,4 +22,11 @@ Route::post('register', [AuthController::class, 'register']);
 Route::group(['middleware' => 'auth:api'], function () {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::get('profile', [AuthController::class, 'profile']);
+
+    # CRUD DE USUARIOS
+    Route::get('users', [UserController::class,'index']);
+    Route::post('user', [UserController::class,'store']);
+    Route::get('user/{id}', [UserController::class,'show']);
+    Route::put('user/{id}', [UserController::class,'update']);
+    Route::delete('user/{id}', [UserController::class,'destroy']);
 });
