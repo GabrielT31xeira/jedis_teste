@@ -153,6 +153,11 @@ class UserController extends Controller
                     'message' => 'User not found'
                 ], 404);
             }
+
+            # Apaga os produtos que aquele usuario cadastrou
+            $user->creator()->delete();
+            # Apaga os produtos que aquele usuario atualizou
+            $user->updater()->delete();
             # Apaga usuario do banco
             $user->delete();
 
