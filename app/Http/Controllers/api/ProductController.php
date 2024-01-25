@@ -3,28 +3,28 @@
 namespace App\Http\Controllers\api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Product;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
-class UserController extends Controller
+class ProductController extends Controller
 {
     public function index()
     {
         try {
             # Busca todos os usuarios no banco de dados
-            $users = User::all();
+            $products = Product::with('creator', 'updater')->get();
 
-            if ($users->count() == 0)
+            if ($products->count() == 0)
             {
                 return response()->json([
-                    "message"=> "No Users Found",
+                    "message"=> "No Products Found",
                 ], 404);
             }
             return response()->json([
-                'message' => 'User list',
-                'users' => $users
+                'message' => 'Product list',
+                'products' => $products
             ]);
         } catch (\Exception $e) {
             # Retorno de erros relacionados ao servidor
@@ -41,8 +41,12 @@ class UserController extends Controller
             # Validação dos dados enviados
             $validate = Validator::make($request->all(),[
                 'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:6'
+                'description' => 'required|string|max:255',
+                'preco' => 'required|numeric',
+                'garantia' => 'required|string|max:255',
+                'marca' => 'required|string|max:255',
+                'material' => 'required|string|max:255',
+                'origem'=> 'required|string|max:255'
             ]);
             if ($validate->fails()) {
                 return response()->json([
@@ -50,17 +54,24 @@ class UserController extends Controller
                     'error' => $validate->errors()
                 ], 422);
             }
+            # Buscando o usuario logado
+            $user_id = Auth::user()->id;
 
-            # Criação do usuario de acordo com os dados enviados
-            $user = User::create([
+            # Criação do produto de acordo com os dados enviados
+            $product = Product::create([
+                'created_by' => $user_id,
                 'name' => $request->name,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'description' => $request->description,
+                'preco' => $request->preco,
+                'garantia' => $request->garantia,
+                'marca' => $request->marca,
+                'material' => $request->material,
+                'origem' => $request->origem
             ]);
 
             return response()->json([
-                'message' => 'User created successfully',
-                'user' => $user
+                'message' => 'Product created successfully',
+                'product' => $product
             ]);
         } catch (\Exception $e) {
             # Retorno de erros relacionados ao servidor
@@ -74,18 +85,19 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            # Busca usuario no banco de dados
-            $user = User::find($id);
+            # Busca o produto no banco de dados
+            $product = Product::with('creator', 'updater')->find($id);
             # Se não encontrar o usuario retorna um not found
-            if($user == null) {
+            if($product == null) {
                 return response()->json([
-                    'message' => 'User not found'
+                    'message' => 'Product not found'
                 ], 404);
             }
+
             # Retorna o usuario
             return response()->json([
-                'message' => 'User find',
-                'user' => $user
+                'message' => 'Product find',
+                'product' => $product
             ]);
         } catch (\Exception $e) {
             # Retorno de erros relacionados ao servidor
@@ -99,11 +111,14 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            # Validação dos dados enviados
             $validate = Validator::make($request->all(),[
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:6'
+                'name' => 'string|max:255',
+                'description' => 'string|max:255',
+                'preco' => 'numeric',
+                'garantia' => 'string|max:255',
+                'marca' => 'string|max:255',
+                'material' => 'string|max:255',
+                'origem'=> 'string|max:255'
             ]);
             if ($validate->fails()) {
                 return response()->json([
@@ -112,25 +127,36 @@ class UserController extends Controller
                 ], 422);
             }
 
-            # Busca usuario no banco de dados
-            $user = User::find($id);
+            # Busca o produto no banco de dados
+            $product = Product::find($id);
 
-            # Se não encontrar o usuario retorna um not found
-            if($user == null) {
+            # Se não encontrar o produto retorna um not found
+            if($product == null) {
                 return response()->json([
-                    'message' => 'User not found'
+                    'message' => 'Product not found'
                 ], 404);
             }
 
+            # Buscando o usuario logado
+            $user_id = Auth::user()->id;
+
             # Altera e salva os dados no banco de dados
-            $user->name = $request->name;
-            $user->email = $request->email;
-            $user->password = Hash::make($request->password);
-            $user->save();
+            $product->name = $request->name;
+            $product->description = $request->description;
+            $product->preco = $request->preco;
+            $product->garantia = $request->garantia;
+            $product->marca = $request->marca;
+            $product->material = $request->material;
+            $product->origem = $request->origem;
+            $product->updated_by = $user_id;
+            $product->save();
+
+            # Busca o produto no banco de dados
+            $product = Product::with('creator', 'updater')->find($id);
 
             return response()->json([
-                'message' => 'User update successfully',
-                'user' => $user
+                'message' => 'Product update successfully',
+                'product' => $product
             ]);
 
         } catch (\Exception $e) {
@@ -145,20 +171,20 @@ class UserController extends Controller
     public function destroy($id)
     {
         try {
-            # Busca usuario no banco de dados
-            $user = User::find($id);
-            # Se não encontrar o usuario retorna um not found
-            if($user == null) {
+            # Busca o produto no banco de dados
+            $product = Product::find($id);
+            # Se não encontrar o produto retorna um not found
+            if($product == null) {
                 return response()->json([
-                    'message' => 'User not found'
+                    'message' => 'Product not found'
                 ], 404);
             }
-            # Apaga usuario do banco
-            $user->delete();
+            # Apaga o produto do banco
+            $product->delete();
 
             # Retorna mensagem de sucesso
             return response()->json([
-                'message' => 'User delete successfully'
+                'message' => 'Product delete successfully'
             ]);
         } catch (\Exception $e) {
             # Retorno de erros relacionados ao servidor

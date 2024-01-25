@@ -37,7 +37,7 @@ services:
       - "DB_DATABASE=app"
       - "DB_USERNAME=app"
       - "DB_PASSWORD=!ChangeMe!"
-    command: bash -c "composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && php-fpm"
+    command: bash -c "composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && php artisan passport:install && php-fpm"
     depends_on:
       - database
       - redis
