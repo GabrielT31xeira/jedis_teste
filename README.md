@@ -1,66 +1,138 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Avalicação Técnica Jedis
+Olá senhor(a) avaliador, Gabriel Teixeira aqui, aqui está o resultado do teste técnico que me foi enviado via e-mail em 24/01/2024. O teste consistia na criação de uma aplicação Laravel que utiliza o Laravel Passport e possui CRUDs de Usuários e Produtos. Quero adiantar desde já que todas as prerrogativas presentes no documento que me foi enviado foram cumpridas, inclusive a utilização das seguintes tecnologias:
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+<a href="https://laravel.com/">
+    <img src="https://shields.io/badge/Laravel-10.0v-blue.svg?logo=laravel" alt="Laravel 10.0" />
+</a>
+<a href="https://docker.com">
+    <img src="https://shields.io/badge/Docker-24.0v-blue.svg?logo=docker" alt="Docker 24.0" />
+</a>
+<a href="https://www.postgresql.org/">
+    <img src="https://shields.io/badge/Postgres-15.0v-blue.svg?logo=postgresql" alt="Postgres 15.0" />
+</a>
+<a href="https://redis.io/">
+    <img src="https://shields.io/badge/Redis-7.2v-blue.svg?logo=redis" alt="Redis 7.2" />
+</a>
+<a href="https://nginx.org/">
+    <img src="https://shields.io/badge/Nginx-1.25v-blue.svg?logo=nginx" alt="Nginx 1.25" />
+</a>
 
-## About Laravel
+Quero deixar claro que utilizei todas as tecnologias e também agradeço muito pela oportunidade que me foi dada 😁.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+![Alt Text](https://66.media.tumblr.com/5d660d5cee750d69c64c4e5eaca5e862/tumblr_mqklvtXpgy1s0kkr4o1_250.gif)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**OBSERVAÇÕES IMPORTANTES**: 
+- Usar Accept-application/json nos headers das requisições.
+- Verificar a versão do Docker para o pleno funcionamento da aplicação.
+- Também fiz uma tarefa a mais porque achei que seria mais coerente. Os produtos têm foreign keys da pessoa que cadastrou aquele produto e da pessoa que atualizou aquele produto. O único "problema" seria na hora de apagar um usuário, que também apaga o produto em que aquele usuário tem foreign key. Dessa maneira, não temos simplesmente produtos cadastrados soltos no banco de dados.
+- O Redis é utilizado apenas nas requisições de busca de dados com o lifetime de 40 segundos.  
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+A aplicação é de simples execução, "plug and play". Basta rodar:
+```
+docker compose up --build
+```
+e esperar essa mensagem no console do docker: 
+```
+NOTICE: fpm is running, pid 1
+NOTICE: ready to handle connections
+``` 
+# Documentação das rotas
+Toda a aplicação tem como base a url: ```http://localhost::80/api```
 
-## Learning Laravel
+## Rota de Registro - POST
+```/register```
+Exemplo do json:
+```
+{
+  "name": "example",
+  "email": "example@gmail.com",
+  "password": "example321"
+}
+```
+## Rota de Login - POST 
+```/login```
+Exemplo do json:
+```
+{
+  "email": "example@gmail.com",
+  "password": "example321"
+}
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+**OBSERVAÇÃO:** A partir daqui todas as rotas estão protegidas então LEMBRE-SE de usar Bearer {token}
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Rota de logout - POST
+```/logout```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Rota para buscar o profile do usuario logado - GET
+```/profile```
 
-## Laravel Sponsors
+## Buscar todos os usuarios do sistema - GET
+```/users```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Buscar um usuario do sistema - GET
+```/user/{id}```
 
-### Premium Partners
+## Cadastrar usuario no sistema - POST
+```/user```
+Exemplo do json:
+```
+{
+  "name": "gabriel",
+  "email": "gabriel@gmail.com",
+  "password": "gabrielgabriel"
+}
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## Alterar usuario no sistema - PUT
+```/user/{id}```
+Exemplo do json:
+```
+{
+  "name": "heitor",
+  "email": "heitor@gmail.com",
+  "password": "heitor321"
+}
+```
 
-## Contributing
+## Apagar usuario do sistema - DELETE
+```/user/{id}```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Buscar todos os produtos do sistema - GET
+```/products```
 
-## Code of Conduct
+## Buscar um produto do sistema - GET
+```/product/{id}```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Cadastrar produto no sistema - POST
+```/product```
+Exemplo do json:
+```
+{
+  "name": "Sabão",
+  "description": "Sabão de corpo",
+  "preco": 10.00,
+  "garantia": "7 dias",
+  "marca": "J&J",
+  "material": "Sal de ácido graxo",
+  "origem": "Vegetal"
+}
+```
 
-## Security Vulnerabilities
+## Alterar produto no sistema - PUT
+```/product/{id}```
+Exemplo do json:
+```
+{
+  "name": "Sabão",
+  "description": "Sabão de corpo",
+  "preco": 15.00,
+  "garantia": "7 dias",
+  "marca": "J&J",
+  "material": "Sal de ácido graxo",
+  "origem": "Vegetal"
+}
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Apagar produto do sistema - DELETE
+```/product/{id}```
