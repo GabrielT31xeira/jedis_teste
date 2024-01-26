@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Helpers\Cacher;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -10,17 +11,30 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
+    private $cacher;
+
+    public function __construct()
+    {
+        $this->cacher = new Cacher('file');
+    }
     public function index()
     {
         try {
-            # Busca todos os usuarios no banco de dados
-            $users = User::all();
+            # Busca os dados no redis
+            $cacherData = $this->cacher->getCached('user');
+            # Atualiza a variavel para o retorno rápido
+            if ($cacherData) {
+                $users = $cacherData;
+            } else {
+                # Busca todos os usuarios no banco de dados
+                $users = User::all();
 
-            if ($users->count() == 0)
-            {
-                return response()->json([
-                    "message"=> "No Users Found",
-                ], 404);
+                if ($users->count() == 0) {
+                    return response()->json([
+                        "message" => "No Users Found",
+                    ], 404);
+                }
+                $this->cacher->setCached('user_',  $users->toJson());
             }
             return response()->json([
                 'message' => 'User list',
@@ -39,7 +53,7 @@ class UserController extends Controller
     {
         try {
             # Validação dos dados enviados
-            $validate = Validator::make($request->all(),[
+            $validate = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:6'
@@ -74,13 +88,23 @@ class UserController extends Controller
     public function show($id)
     {
         try {
-            # Busca usuario no banco de dados
-            $user = User::find($id);
-            # Se não encontrar o usuario retorna um not found
-            if($user == null) {
-                return response()->json([
-                    'message' => 'User not found'
-                ], 404);
+            # Busca os dados no redis
+            $cacherData = $this->cacher->getCached('user');
+            # Atualiza a variavel para o retorno rápido
+            if ($cacherData) {
+                $user = $cacherData;
+                # Busca todos os usuarios no banco de dados
+            } else {
+                # Busca usuario no banco de dados
+                $user = User::find($id);
+                # Se não encontrar o usuario retorna um not found
+                if ($user == null) {
+                    return response()->json([
+                        'message' => 'User not found'
+                    ], 404);
+                }
+                # Adiciona valores ao redis
+                $this->cacher->setCached('user_'.$id,  $user->toJson());
             }
             # Retorna o usuario
             return response()->json([
@@ -100,7 +124,7 @@ class UserController extends Controller
     {
         try {
             # Validação dos dados enviados
-            $validate = Validator::make($request->all(),[
+            $validate = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:6'
@@ -116,7 +140,7 @@ class UserController extends Controller
             $user = User::find($id);
 
             # Se não encontrar o usuario retorna um not found
-            if($user == null) {
+            if ($user == null) {
                 return response()->json([
                     'message' => 'User not found'
                 ], 404);
@@ -132,7 +156,6 @@ class UserController extends Controller
                 'message' => 'User update successfully',
                 'user' => $user
             ]);
-
         } catch (\Exception $e) {
             # Retorno de erros relacionados ao servidor
             return response()->json([
@@ -148,7 +171,7 @@ class UserController extends Controller
             # Busca usuario no banco de dados
             $user = User::find($id);
             # Se não encontrar o usuario retorna um not found
-            if($user == null) {
+            if ($user == null) {
                 return response()->json([
                     'message' => 'User not found'
                 ], 404);

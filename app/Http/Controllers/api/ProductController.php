@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\api;
 
+use App\Helpers\Cacher;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -10,17 +11,30 @@ use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+    private $cacher;
+
+    public function __construct()
+    {
+        $this->cacher = new Cacher('file');
+    }
+
     public function index()
     {
         try {
+            # Busca os dados no redis
+            $cacherData = $this->cacher->getCached('product');
+            # Atualiza a variavel para o retorno rápido
+            if ($cacherData) {
+                $products = $cacherData;
             # Busca todos os usuarios no banco de dados
-            $products = Product::with('creator', 'updater')->get();
-
-            if ($products->count() == 0)
-            {
-                return response()->json([
-                    "message"=> "No Products Found",
-                ], 404);
+            } else {
+                $products = Product::with('creator', 'updater')->get();
+                if ($products->count() == 0) {
+                    return response()->json([
+                        "message" => "No Products Found",
+                    ], 404);
+                }
+                $this->cacher->setCached('product_',  $products->toJson());
             }
             return response()->json([
                 'message' => 'Product list',
@@ -39,14 +53,14 @@ class ProductController extends Controller
     {
         try {
             # Validação dos dados enviados
-            $validate = Validator::make($request->all(),[
+            $validate = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'description' => 'required|string|max:255',
                 'preco' => 'required|numeric',
                 'garantia' => 'required|string|max:255',
                 'marca' => 'required|string|max:255',
                 'material' => 'required|string|max:255',
-                'origem'=> 'required|string|max:255'
+                'origem' => 'required|string|max:255'
             ]);
             if ($validate->fails()) {
                 return response()->json([
@@ -85,13 +99,22 @@ class ProductController extends Controller
     public function show($id)
     {
         try {
-            # Busca o produto no banco de dados
-            $product = Product::with('creator', 'updater')->find($id);
-            # Se não encontrar o usuario retorna um not found
-            if($product == null) {
-                return response()->json([
-                    'message' => 'Product not found'
-                ], 404);
+            # Busca os dados no redis
+            $cacherData = $this->cacher->getCached('product');
+            # Atualiza a variavel para o retorno rápido
+            if ($cacherData) {
+                $product = $cacherData;
+            # Busca todos os usuarios no banco de dados
+            } else {
+                # Busca o produto no banco de dados
+                $product = Product::with('creator', 'updater')->find($id);
+                # Se não encontrar o usuario retorna um not found
+                if ($product == null) {
+                    return response()->json([
+                        'message' => 'Product not found'
+                    ], 404);
+                }
+                $this->cacher->setCached('product_'.$id,  $product->toJson());
             }
 
             # Retorna o usuario
@@ -111,14 +134,14 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $validate = Validator::make($request->all(),[
+            $validate = Validator::make($request->all(), [
                 'name' => 'string|max:255',
                 'description' => 'string|max:255',
                 'preco' => 'numeric',
                 'garantia' => 'string|max:255',
                 'marca' => 'string|max:255',
                 'material' => 'string|max:255',
-                'origem'=> 'string|max:255'
+                'origem' => 'string|max:255'
             ]);
             if ($validate->fails()) {
                 return response()->json([
@@ -131,7 +154,7 @@ class ProductController extends Controller
             $product = Product::find($id);
 
             # Se não encontrar o produto retorna um not found
-            if($product == null) {
+            if ($product == null) {
                 return response()->json([
                     'message' => 'Product not found'
                 ], 404);
@@ -158,7 +181,6 @@ class ProductController extends Controller
                 'message' => 'Product update successfully',
                 'product' => $product
             ]);
-
         } catch (\Exception $e) {
             # Retorno de erros relacionados ao servidor
             return response()->json([
@@ -174,7 +196,7 @@ class ProductController extends Controller
             # Busca o produto no banco de dados
             $product = Product::find($id);
             # Se não encontrar o produto retorna um not found
-            if($product == null) {
+            if ($product == null) {
                 return response()->json([
                     'message' => 'Product not found'
                 ], 404);

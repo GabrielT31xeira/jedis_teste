@@ -1,0 +1,3 @@
+FROM redis:latest
+# Expondo o redis para ser acessado de fora
+EXPOSE 6379
