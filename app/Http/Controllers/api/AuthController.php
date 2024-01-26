@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -17,10 +18,17 @@ class AuthController extends Controller
     {
         try {
             # Validação dos dados enviados
-            $request->validate([
+            $validate = Validator::make($request->all(), [
                 'email' => 'required|string|email',
                 'password' => 'required|string',
             ]);
+
+            if ($validate->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'error' => $validate->errors()
+                ], 422);
+            }
 
             $data = $request->all();
             # Verificando se os dados existem no banco de dados
