@@ -29,6 +29,7 @@ class ProductController extends Controller
                 }
                 # Insere os dados no redis
                 Redis::set('product', $products->toJson());
+                Redis::expire('product', 60);
             }
             return response()->json([
                 'message' => 'Product list',
@@ -108,6 +109,7 @@ class ProductController extends Controller
                     ], 404);
                 }
                 Redis::set('product' . $id, $product->toJson());
+                Redis::expire('product' . $id, 60);
             }
 
             # Retorna o produto

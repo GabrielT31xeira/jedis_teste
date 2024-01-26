@@ -25,7 +25,7 @@ Quero deixar claro que utilizei todas as tecnologias e também agradeço muito p
 - Usar Accept-application/json nos headers das requisições.
 - Verificar a versão do Docker para o pleno funcionamento da aplicação.
 - Também fiz uma tarefa a mais porque achei que seria mais coerente. Os produtos têm foreign keys da pessoa que cadastrou aquele produto e da pessoa que atualizou aquele produto. O único "problema" seria na hora de apagar um usuário, que também apaga o produto em que aquele usuário tem foreign key. Dessa maneira, não temos simplesmente produtos cadastrados soltos no banco de dados.
-- O Redis é utilizado apenas nas requisições de busca de dados com o lifetime de 5 minutos.  
+- O Redis é utilizado apenas nas requisições de busca de dados com o lifetime de 1 minuto.  
 
 A aplicação é de simples execução, "plug and play". Basta rodar:
 ```

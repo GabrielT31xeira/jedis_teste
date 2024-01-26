@@ -30,6 +30,7 @@ class UserController extends Controller
                 }
                 # Insere os dados no redis
                 Redis::set('user', $users->toJson());
+                Redis::expire('user', 60);
             }
             return response()->json([
                 'message' => 'User list',
@@ -100,6 +101,7 @@ class UserController extends Controller
                 }
                 # Adiciona valores ao redis
                 Redis::set('user' . $id, $user->toJson());
+                Redis::expire('user' . $id, 60);
             }
             # Retorna o usuario
             return response()->json([
