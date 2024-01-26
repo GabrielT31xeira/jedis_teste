@@ -40,7 +40,7 @@ class AuthController extends Controller
                 return response()->json(['token' => $token], 200);
             } else {
                 # Caso os dados não sejam encontrados retorna não autorizado
-                return response()->json(['error' => 'Unauthorised'], 401);
+                return response()->json(['error' => 'Error in credentials'], 401);
             }
         # Retorno de erros relacionados ao servidor
         } catch (\Exception $e) {
