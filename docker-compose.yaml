@@ -37,8 +37,7 @@ services:
       - "DB_DATABASE=app"
       - "DB_USERNAME=app"
       - "DB_PASSWORD=!ChangeMe!"
-      - "REDIS_HOST=redis"
-      - "REDIS_PASSWORD=Jedis@6379"
+      - "REDIS_HOST=cache"
       - "REDIS_PORT=6379"
     command: bash -c "composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && php artisan passport:install && php-fpm"
     depends_on:
@@ -64,13 +63,15 @@ services:
 
   # Criando o banco de dados de cache Redis
   redis:
+    container_name: cache
     build:
       context: .
       dockerfile: Dockerfile-redis
-    restart: always
-    command: redis-server --requirepass "Jedis@6379"
+    command: redis-server
     ports:
       - "6379:6379"
+    networks:
+      - jedis_api
 
 volumes:
   database_data:

@@ -2,31 +2,24 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Helpers\Cacher;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
-    private $cacher;
-
-    public function __construct()
-    {
-        $this->cacher = new Cacher('file');
-    }
-
     public function index()
     {
         try {
             # Busca os dados no redis
-            $cacherData = $this->cacher->getCached('product');
+            $cacherData = Redis::get('product');
             # Atualiza a variavel para o retorno rápido
             if ($cacherData) {
-                $products = $cacherData;
-            # Busca todos os usuarios no banco de dados
+                $products = json_decode($cacherData, true);
+                # Busca todos os produtos no banco de dados
             } else {
                 $products = Product::with('creator', 'updater')->get();
                 if ($products->count() == 0) {
@@ -34,7 +27,8 @@ class ProductController extends Controller
                         "message" => "No Products Found",
                     ], 404);
                 }
-                $this->cacher->setCached('product_',  $products->toJson());
+                # Insere os dados no redis
+                Redis::set('product', $products->toJson());
             }
             return response()->json([
                 'message' => 'Product list',
@@ -100,24 +94,23 @@ class ProductController extends Controller
     {
         try {
             # Busca os dados no redis
-            $cacherData = $this->cacher->getCached('product');
+            $cacherData = Redis::get('product' . $id);
             # Atualiza a variavel para o retorno rápido
             if ($cacherData) {
-                $product = $cacherData;
-            # Busca todos os usuarios no banco de dados
+                $product = json_decode($cacherData, true);
             } else {
                 # Busca o produto no banco de dados
                 $product = Product::with('creator', 'updater')->find($id);
-                # Se não encontrar o usuario retorna um not found
+                # Se não encontrar o produto retorna um not found
                 if ($product == null) {
                     return response()->json([
                         'message' => 'Product not found'
                     ], 404);
                 }
-                $this->cacher->setCached('product_'.$id,  $product->toJson());
+                Redis::set('product' . $id, $product->toJson());
             }
 
-            # Retorna o usuario
+            # Retorna o produto
             return response()->json([
                 'message' => 'Product find',
                 'product' => $product
@@ -201,6 +194,8 @@ class ProductController extends Controller
                     'message' => 'Product not found'
                 ], 404);
             }
+            # Apaga o dado do redis
+            Redis::del('product' . $id);
             # Apaga o produto do banco
             $product->delete();
 

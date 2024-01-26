@@ -2,29 +2,23 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Helpers\Cacher;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    private $cacher;
-
-    public function __construct()
-    {
-        $this->cacher = new Cacher('file');
-    }
     public function index()
     {
         try {
             # Busca os dados no redis
-            $cacherData = $this->cacher->getCached('user');
+            $cacherData = Redis::get('user');
             # Atualiza a variavel para o retorno rápido
             if ($cacherData) {
-                $users = $cacherData;
+                $users = json_decode($cacherData, true);
             } else {
                 # Busca todos os usuarios no banco de dados
                 $users = User::all();
@@ -34,7 +28,8 @@ class UserController extends Controller
                         "message" => "No Users Found",
                     ], 404);
                 }
-                $this->cacher->setCached('user_',  $users->toJson());
+                # Insere os dados no redis
+                Redis::set('user', $users->toJson());
             }
             return response()->json([
                 'message' => 'User list',
@@ -89,10 +84,10 @@ class UserController extends Controller
     {
         try {
             # Busca os dados no redis
-            $cacherData = $this->cacher->getCached('user');
+            $cacherData = Redis::get('user' . $id);
             # Atualiza a variavel para o retorno rápido
             if ($cacherData) {
-                $user = $cacherData;
+                $user = json_decode($cacherData, true);
                 # Busca todos os usuarios no banco de dados
             } else {
                 # Busca usuario no banco de dados
@@ -104,7 +99,7 @@ class UserController extends Controller
                     ], 404);
                 }
                 # Adiciona valores ao redis
-                $this->cacher->setCached('user_'.$id,  $user->toJson());
+                Redis::set('user' . $id, $user->toJson());
             }
             # Retorna o usuario
             return response()->json([
@@ -175,8 +170,10 @@ class UserController extends Controller
                 return response()->json([
                     'message' => 'User not found'
                 ], 404);
-            }
 
+            }
+            # Apaga o dado do redis
+            Redis::del('user' . $id);
             # Apaga os produtos que aquele usuario cadastrou
             $user->creator()->delete();
             # Apaga os produtos que aquele usuario atualizou
