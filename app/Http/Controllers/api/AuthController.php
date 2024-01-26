@@ -56,11 +56,18 @@ class AuthController extends Controller
     {
         try {
             # Validação dos dados enviados
-            $request->validate([
+            $validate = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users',
                 'password' => 'required|string|min:6'
             ]);
+
+            if ($validate->fails()) {
+                return response()->json([
+                    'message' => 'Validation error',
+                    'error' => $validate->errors()
+                ], 422);
+            }
 
             # Criação do usuario de acordo com os dados enviados
             $user = User::create([
